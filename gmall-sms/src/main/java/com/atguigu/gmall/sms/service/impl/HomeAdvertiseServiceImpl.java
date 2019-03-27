@@ -43,4 +43,13 @@ public class HomeAdvertiseServiceImpl extends ServiceImpl<HomeAdvertiseMapper, H
         Map<String, Object> map = PageMapUtils.getPageMap(selectPage);
         return map;
     }
+
+    @Override
+    public boolean updateStatus(Integer status, Long id) {
+        HomeAdvertise homeAdvertise = new HomeAdvertise();
+        homeAdvertise.setId(id);
+        homeAdvertise.setStatus(status);
+        Integer update = baseMapper.updateById(homeAdvertise);
+        return null != update && update > 0;
+    }
 }

@@ -3,6 +3,8 @@ package com.atguigu.gmall.sms.mapper;
 import com.atguigu.gmall.sms.entity.HomeBrand;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
+import java.util.List;
+
 /**
  * <p>
  * 首页推荐品牌表 Mapper 接口
@@ -13,4 +15,5 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  */
 public interface HomeBrandMapper extends BaseMapper<HomeBrand> {
 
+    Integer updateRecommendStatusByIds(List<Long> ids, Integer recommendStatus);
 }

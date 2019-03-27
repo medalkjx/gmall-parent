@@ -26,4 +26,13 @@ public interface HomeAdvertiseService extends IService<HomeAdvertise> {
      * @return
      */
     Map<String, Object> pageHomeAdvertise(String name, Integer type, String endTime, Integer pageNum, Integer pageSize);
+
+    /**
+     * 修改上下线状态
+     *
+     * @param status
+     * @param id
+     * @return
+     */
+    boolean updateStatus(Integer status, Long id);
 }
