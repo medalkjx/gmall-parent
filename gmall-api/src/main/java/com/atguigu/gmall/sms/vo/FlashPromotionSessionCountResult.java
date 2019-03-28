@@ -1,11 +1,8 @@
 package com.atguigu.gmall.sms.vo;
 
 import com.atguigu.gmall.sms.entity.FlashPromotionSession;
-import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
-
-import java.io.Serializable;
-import java.util.Date;
+import lombok.EqualsAndHashCode;
 
 /**
  * @author ：mei

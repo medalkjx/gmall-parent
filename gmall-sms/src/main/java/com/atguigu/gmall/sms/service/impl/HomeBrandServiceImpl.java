@@ -75,7 +75,9 @@ public class HomeBrandServiceImpl extends ServiceImpl<HomeBrandMapper, HomeBrand
 
     @Override
     public boolean updateRecommendStatus(List<Long> ids, Integer recommendStatus) {
-        Integer update = baseMapper.updateRecommendStatusByIds(ids, recommendStatus);
+        HomeBrand homeBrand = new HomeBrand();
+        homeBrand.setRecommendStatus(recommendStatus);
+        Integer update = baseMapper.update(homeBrand, new QueryWrapper<HomeBrand>().in("id", ids));
         return null != update && update > 0;
     }
 }

@@ -30,11 +30,11 @@ public class SmsHomeAdvertiseController {
 
     @ApiOperation("分页查询广告")
     @GetMapping("/list")
-    public Object list(@RequestParam(value = "广告名称", required = false) String name,
-                       @RequestParam(value = "广告类型", required = false) Integer type,
-                       @RequestParam(value = "广告结束时间", required = false) String endTime,
-                       @RequestParam(value = "页码", defaultValue = "1") Integer pageNum,
-                       @RequestParam(value = "页面显示条数", defaultValue = "5") Integer pageSize) {
+    public Object list(@RequestParam(value = "name", required = false) String name,
+                       @RequestParam(value = "type", required = false) Integer type,
+                       @RequestParam(value = "endTime", required = false) String endTime,
+                       @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum,
+                       @RequestParam(value = "pageSize", defaultValue = "5") Integer pageSize) {
 
         Map<String, Object> pageInfo = homeAdvertiseService.pageHomeAdvertise(name, type, endTime, pageNum, pageSize);
         return new CommonResult().success(pageInfo);

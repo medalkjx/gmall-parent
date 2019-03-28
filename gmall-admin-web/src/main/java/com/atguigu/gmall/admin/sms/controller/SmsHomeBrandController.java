@@ -28,10 +28,10 @@ public class SmsHomeBrandController {
 
     @ApiOperation("分页查询推荐品牌")
     @GetMapping("/list")
-    public Object list(@RequestParam(value = "品牌名称", required = false) String brandName,
-                       @RequestParam(value = "推荐状态", required = false) Integer recommendStatus,
-                       @RequestParam(value = "页码", defaultValue = "1") Integer pageNum,
-                       @RequestParam(value = "当前页面显示条数", defaultValue = "5") Integer pageSize) {
+    public Object list(@RequestParam(value = "brandName", required = false) String brandName,
+                       @RequestParam(value = "recommendStatus", required = false) Integer recommendStatus,
+                       @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum,
+                       @RequestParam(value = "pageSize", defaultValue = "5") Integer pageSize) {
         Map<String, Object> pageInfo = homeBrandService.pageHomeBrand(brandName, recommendStatus, pageNum, pageSize);
         return new CommonResult().success(pageInfo);
     }

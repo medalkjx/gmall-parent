@@ -15,9 +15,5 @@
     <sql id="Base_Column_List">
         id, brand_id, brand_name, recommend_status, sort
     </sql>
-    <update id="updateRecommendStatusByIds">
-       UPDATE `sms_home_brand` SET `recommend_status`= #{recommendStatus}
-          WHERE id IN #{ids}
-    </update>
 
 </mapper>

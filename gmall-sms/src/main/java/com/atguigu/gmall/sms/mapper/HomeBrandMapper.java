@@ -15,5 +15,4 @@ import java.util.List;
  */
 public interface HomeBrandMapper extends BaseMapper<HomeBrand> {
 
-    Integer updateRecommendStatusByIds(List<Long> ids, Integer recommendStatus);
 }
