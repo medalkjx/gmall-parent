@@ -1,5 +1,6 @@
 package com.atguigu.gmall.sms.service.impl;
 
+import com.alibaba.dubbo.config.annotation.Service;
 import com.atguigu.gmall.sms.entity.HomeNewProduct;
 import com.atguigu.gmall.sms.mapper.HomeNewProductMapper;
 import com.atguigu.gmall.sms.service.HomeNewProductService;
@@ -23,6 +24,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * @author mei
  * @since 2019-03-25
  */
+@Service
 @Component
 public class HomeNewProductServiceImpl extends ServiceImpl<HomeNewProductMapper, HomeNewProduct> implements HomeNewProductService {
 
