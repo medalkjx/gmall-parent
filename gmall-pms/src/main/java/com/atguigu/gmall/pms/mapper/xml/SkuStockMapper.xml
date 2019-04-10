@@ -4,24 +4,30 @@
 
     <!-- 通用查询映射结果 -->
     <resultMap id="BaseResultMap" type="com.atguigu.gmall.pms.entity.SkuStock">
-        <id column="id" property="id" />
-        <result column="product_id" property="productId" />
-        <result column="sku_code" property="skuCode" />
-        <result column="price" property="price" />
-        <result column="stock" property="stock" />
-        <result column="low_stock" property="lowStock" />
-        <result column="sp1" property="sp1" />
-        <result column="sp2" property="sp2" />
-        <result column="sp3" property="sp3" />
-        <result column="pic" property="pic" />
-        <result column="sale" property="sale" />
-        <result column="promotion_price" property="promotionPrice" />
-        <result column="lock_stock" property="lockStock" />
+        <id column="id" property="id"/>
+        <result column="product_id" property="productId"/>
+        <result column="sku_code" property="skuCode"/>
+        <result column="price" property="price"/>
+        <result column="stock" property="stock"/>
+        <result column="low_stock" property="lowStock"/>
+        <result column="sp1" property="sp1"/>
+        <result column="sp2" property="sp2"/>
+        <result column="sp3" property="sp3"/>
+        <result column="pic" property="pic"/>
+        <result column="sale" property="sale"/>
+        <result column="promotion_price" property="promotionPrice"/>
+        <result column="lock_stock" property="lockStock"/>
     </resultMap>
 
     <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
         id, product_id, sku_code, price, stock, low_stock, sp1, sp2, sp3, pic, sale, promotion_price, lock_stock
     </sql>
+    <update id="updateLockStock">
+        UPDATE `pms_sku_stock` SET `lock_stock` = `lock_stock`+ #{quantity} WHERE id = #{skuId}
+    </update>
+    <update id="updateReleaseStock">
+        UPDATE `pms_sku_stock` SET `lock_stock` = `lock_stock`- #{quantity} WHERE id = #{skuId}
+    </update>
 
 </mapper>

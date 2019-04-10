@@ -98,6 +98,11 @@ public class CouponServiceImpl extends ServiceImpl<CouponMapper, Coupon> impleme
         proxy.updateCouponProductCategoryRelation(couponRelationParam.getCouponProductCategoryRelationList());
     }
 
+    @Override
+    public Coupon getCouponByProductId(Long id) {
+        return baseMapper.selectCouponByProductId(id);
+    }
+
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void updateCouponProductCategoryRelation(List<CouponProductCategoryRelation> couponProductCategoryRelationList) {
         Coupon coupon = threadLocal.get();

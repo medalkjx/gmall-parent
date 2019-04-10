@@ -15,9 +15,9 @@ import java.io.Serializable;
 public class SearchParam implements Serializable {
 
 
-    private Long catelog3Id;//三级分类id
+    private Long[] catelog3Id;//三级分类id
 
-    private Long brandId;//品牌id
+    private Long[] brandId;//品牌id
 
     private String keyword;//检索的关键字
 
@@ -30,6 +30,9 @@ public class SearchParam implements Serializable {
     private String[] props;//页面提交的数组
 
     private Integer pageSize = 12;
+
+    private Integer priceFrom;//价格区间开始
+    private Integer priceTo;//价格区间结束
 
 
 }

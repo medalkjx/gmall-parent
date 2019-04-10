@@ -10,8 +10,6 @@
     <packaging>pom</packaging>
 
 
-
-
     <!--聚合-->
     <modules>
         <module>gmall-common</module>
@@ -25,9 +23,11 @@
         <module>gmall-wms</module>
         <module>gmall-mbg</module>
         <module>gmall-search</module>
+        <module>gmall-cas</module>
+        <module>gmall-cart</module>
+        <module>gmall-item</module>
         <module>gmall-portal-web</module>
     </modules>
-
 
 
 </project>

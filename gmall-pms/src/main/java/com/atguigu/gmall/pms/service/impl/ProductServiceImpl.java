@@ -2,10 +2,12 @@ package com.atguigu.gmall.pms.service.impl;
 
 import com.alibaba.dubbo.config.annotation.Reference;
 import com.alibaba.dubbo.config.annotation.Service;
+import com.alibaba.fastjson.JSON;
 import com.atguigu.gmall.cms.entity.PrefrenceAreaProductRelation;
 import com.atguigu.gmall.cms.entity.SubjectProductRelation;
 import com.atguigu.gmall.cms.service.PrefrenceAreaService;
 import com.atguigu.gmall.cms.service.SubjectService;
+import com.atguigu.gmall.constant.RedisCacheConstant;
 import com.atguigu.gmall.pms.entity.*;
 import com.atguigu.gmall.pms.mapper.*;
 import com.atguigu.gmall.pms.service.ProductService;
@@ -26,13 +28,14 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.params.SetParams;
 
 import javax.validation.Valid;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -60,6 +63,8 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     ProductCategoryMapper productCategoryMapper;
     @Autowired
     private ProductAttributeValueMapper productAttributeValueMapper;
+    @Autowired
+    JedisPool jedisPool;
     @Reference
     SubjectService subjectService;
     @Reference
@@ -112,12 +117,6 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
 
     @Override
     public void updatePublishStatusByIds(List<Long> ids, Integer publishStatus) {
-        //Product product = new Product();
-        //product.setPublishStatus(publishStatus);
-        //QueryWrapper<Product> queryWrapper = new QueryWrapper<>();
-        //queryWrapper.in("id", ids);
-        //Integer result = baseMapper.update(product, queryWrapper);
-        //return null != result && result > 0;
         if (publishStatus == 1) {
             publishProduct(ids);
         } else {
@@ -148,25 +147,25 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
                 if (skuStock.getSp3() == null) {
                     skuStock.setSp3(" ");
                 }
-                esProduct.setName(product.getName() +skuStock.getSp1()+ skuStock.getSp2() + skuStock.getSp3());
+                esProduct.setName(product.getName() + skuStock.getSp1() + skuStock.getSp2() + skuStock.getSp3());
                 esProduct.setPrice(skuStock.getPrice());
                 esProduct.setStock(skuStock.getStock());
                 esProduct.setSale(skuStock.getSale());
                 esProduct.setAttrValueList(attributeValues);
                 esProduct.setId(skuStock.getId());
                 boolean es = searchService.saveProductInfoToES(esProduct);
-                count.set(count.get()+1);
-                if (es){
+                count.set(count.get() + 1);
+                if (es) {
                     //todo 保存当前的id
                     arrayList.add(id);
                 }
             });
-            if (count.get()==skuStocks.size()){
+            if (count.get() == skuStocks.size()) {
                 Product update = new Product();
                 update.setId(product.getId());
                 update.setPublishStatus(1);
                 baseMapper.updateById(update);
-            }else {
+            } else {
                 //todo es arrayList.forEach(remove());
             }
         });
@@ -224,6 +223,54 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         psProxy.updateMemberPriceList(productParam.getMemberPriceList());
         prefrenceAreaService.updatePreFrenceAreaProductRelationList(productParam.getPrefrenceAreaProductRelationList());
         subjectService.updateSubjectProductRelationList(productParam.getSubjectProductRelationList());
+    }
+
+    @Override
+    public Product getProductByIdFromCache(Long productId) {
+        Jedis jedis = jedisPool.getResource();
+        Product product = null;
+        String s = jedis.get(RedisCacheConstant.PRODUCT_INFO_CACHE_KEY + productId);
+        if (StringUtils.isEmpty(s)) {
+            //  Long lock = jedis.setnx("lock", "123");
+            String token = UUID.randomUUID().toString();
+            String lock = jedis.set("lock", token, SetParams.setParams().ex(5).nx());
+            if (!StringUtils.isEmpty(lock) && "ok".equalsIgnoreCase(lock)) {
+                try {
+                    product = baseMapper.selectById(productId);
+                    String json = JSON.toJSONString(product);
+                    if (product == null) {
+                        int anInt = new Random().nextInt(2000);
+                        jedis.setex(RedisCacheConstant.PRODUCT_INFO_CACHE_KEY + productId, 60 + anInt, json);
+                    } else {
+                        int anInt = new Random().nextInt(2000);
+                        jedis.setex(RedisCacheConstant.PRODUCT_INFO_CACHE_KEY + productId, 60 * 60 * 24 * 3 + anInt, json);
+                    }
+                } finally {
+                    String script = "if redis.call('get',KEYS[1]) == ARGV[1] then return redis.call('del',KEYS[1]) else return 0 end";
+                    jedis.eval(script, Collections.singletonList("lock"), Collections.singletonList(token));
+                }
+            } else {
+                try {
+                    Thread.sleep(1000);
+                    getProductByIdFromCache(productId);
+                } catch (InterruptedException e) {
+                }
+            }
+        } else {
+            product = JSON.parseObject(s, Product.class);
+        }
+        jedis.close();
+        return product;
+    }
+
+    @Override
+    public List<EsProductAttributeValue> getProductSaleAttr(Long productId) {
+        return baseMapper.getProductSaleAtte(productId);
+    }
+
+    @Override
+    public List<EsProductAttributeValue> getProductBaseAttr(Long productId) {
+        return baseMapper.getProductBaseAttr(productId);
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -323,7 +370,6 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     @Transactional(propagation = Propagation.REQUIRED)
     @Override
     public void createProductParam(@Valid PmsProductParam productParam) {
-        //TODO  创建商品实现
         ProductServiceImpl psProxy = (ProductServiceImpl) AopContext.currentProxy();
         psProxy.saveBaseProductInfo(productParam);
         psProxy.saveMemberPriceList(productParam.getMemberPriceList());

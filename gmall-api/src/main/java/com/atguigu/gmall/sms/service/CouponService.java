@@ -51,4 +51,11 @@ public interface CouponService extends IService<Coupon> {
      * @param id
      */
     void updateCouponInfoById(CouponRelationParam couponRelationParam,Long id);
+
+    /**
+     * 根据商品Id获取优惠券
+     * @param id
+     * @return
+     */
+    Coupon getCouponByProductId(Long id);
 }

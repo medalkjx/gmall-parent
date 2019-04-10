@@ -13,4 +13,5 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  */
 public interface CouponMapper extends BaseMapper<Coupon> {
 
+    Coupon selectCouponByProductId(Long id);
 }

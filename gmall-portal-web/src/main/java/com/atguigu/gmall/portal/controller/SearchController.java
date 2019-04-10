@@ -23,9 +23,10 @@ public class SearchController {
     @Reference
     GmallSearchService searchService;
 
+
     @GetMapping("/search")
     public SearchResponse search(SearchParam searchParam) throws IOException {
-       SearchResponse searchResponse = searchService.searchProduct(searchParam);
+        SearchResponse searchResponse = searchService.searchProduct(searchParam);
         return searchResponse;
     }
 

@@ -2,7 +2,7 @@ package com.atguigu.gmall.pms.service.impl;
 
 import com.alibaba.dubbo.config.annotation.Service;
 import com.alibaba.fastjson.JSON;
-import com.atguigu.gmall.pms.constant.RedisCacheConstant;
+import com.atguigu.gmall.constant.RedisCacheConstant;
 import com.atguigu.gmall.pms.entity.ProductCategory;
 import com.atguigu.gmall.pms.mapper.ProductCategoryMapper;
 import com.atguigu.gmall.pms.service.ProductCategoryService;

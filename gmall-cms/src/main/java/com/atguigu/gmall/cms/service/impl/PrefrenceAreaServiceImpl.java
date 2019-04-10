@@ -29,6 +29,7 @@ public class PrefrenceAreaServiceImpl extends ServiceImpl<PrefrenceAreaMapper, P
 
     @Autowired
     private PrefrenceAreaProductRelationMapper prefrenceAreaProductRelationMapper;
+
     @Override
     public List<PrefrenceArea> getPrefrenceAreaList() {
         return baseMapper.selectList(null);
@@ -37,7 +38,7 @@ public class PrefrenceAreaServiceImpl extends ServiceImpl<PrefrenceAreaMapper, P
     @Override
     public List<PrefrenceAreaProductRelation> getPrefrenceAreaProductRelationListByProductId(Long productId) {
         QueryWrapper<PrefrenceAreaProductRelation> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("product_id",productId);
+        queryWrapper.eq("product_id", productId);
         List<PrefrenceAreaProductRelation> prefrenceAreaProductRelationList = prefrenceAreaProductRelationMapper.selectList(queryWrapper);
         return prefrenceAreaProductRelationList;
     }
@@ -50,7 +51,7 @@ public class PrefrenceAreaServiceImpl extends ServiceImpl<PrefrenceAreaMapper, P
         });
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional(propagation = Propagation.REQUIRED)
     @Override
     public void savePrefrenceAreaProductRelationList(List<PrefrenceAreaProductRelation> prefrenceAreaProductRelationList, Long id) {
         prefrenceAreaProductRelationList.forEach(prefrenceAreaProductRelation -> {

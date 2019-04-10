@@ -2,6 +2,7 @@ package com.atguigu.gmall.pms.mapper;
 
 import com.atguigu.gmall.pms.entity.SkuStock;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Param;
 
 /**
  * <p>
@@ -13,4 +14,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  */
 public interface SkuStockMapper extends BaseMapper<SkuStock> {
 
+    void updateLockStock(@Param("skuId") Long skuId, @Param("quantity") Integer quantity);
+
+    void updateReleaseStock(@Param("skuId") Long skuId, @Param("quantity") Integer quantity);
 }

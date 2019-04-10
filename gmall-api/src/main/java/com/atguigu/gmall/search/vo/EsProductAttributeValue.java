@@ -23,4 +23,5 @@ public class EsProductAttributeValue implements Serializable {
     //属性名称
     private String name;//网络制式
 
+    private Long productId;
 }

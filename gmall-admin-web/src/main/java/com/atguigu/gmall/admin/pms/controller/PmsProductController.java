@@ -30,7 +30,6 @@ public class PmsProductController {
     @PostMapping(value = "/create")
     public Object create(@Valid @RequestBody PmsProductParam productParam,
                          BindingResult bindingResult) {
-        //TODO 创建商品
         productService.createProductParam(productParam);
         return new CommonResult().success(null);
     }

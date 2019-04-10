@@ -9,6 +9,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -26,9 +27,9 @@ public class SkuStockServiceImpl extends ServiceImpl<SkuStockMapper, SkuStock> i
     @Override
     public List<SkuStock> getListByPidOrKeyword(Long pid, String keyword) {
         QueryWrapper<SkuStock> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("product_id",pid);
-        if (!StringUtils.isEmpty(keyword)){
-            queryWrapper.like("sku_code",keyword);
+        queryWrapper.eq("product_id", pid);
+        if (!StringUtils.isEmpty(keyword)) {
+            queryWrapper.like("sku_code", keyword);
         }
         return baseMapper.selectList(queryWrapper);
     }
@@ -37,13 +38,35 @@ public class SkuStockServiceImpl extends ServiceImpl<SkuStockMapper, SkuStock> i
     public boolean updateSkuStockByPid(Long pid, List<SkuStock> skuStockList) {
         for (SkuStock skuStock : skuStockList) {
             QueryWrapper<SkuStock> queryWrapper = new QueryWrapper<>();
-            queryWrapper.eq("id",skuStock.getId())
-                    .eq("product_id",skuStock.getProductId());
+            queryWrapper.eq("id", skuStock.getId())
+                    .eq("product_id", skuStock.getProductId());
             Integer result = baseMapper.update(skuStock, queryWrapper);
-            if(!(null !=result && result >0)){
+            if (!(null != result && result > 0)) {
                 return false;
             }
         }
         return true;
+    }
+
+    @Override
+    public List<SkuStock> getAllSkuInfoByProductId(Long productId) {
+        return baseMapper.selectList(new QueryWrapper<SkuStock>().eq("product_id", productId));
+    }
+
+    @Override
+    public BigDecimal getSkuPriceById(Long productSkuId) {
+        //TODO 查缓存+读写锁
+        SkuStock skuStock = baseMapper.selectById(productSkuId);
+        return skuStock.getPrice();
+    }
+
+    @Override
+    public void updateStock(Long skuId, Integer quantity) {
+        baseMapper.updateLockStock(skuId, quantity);
+    }
+
+    @Override
+    public void releaseStock(Long skuId, Integer quantity) {
+        baseMapper.updateReleaseStock(skuId, quantity);
     }
 }

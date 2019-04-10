@@ -14,6 +14,8 @@ import io.searchbox.core.Search;
 import io.searchbox.core.SearchResult;
 import io.searchbox.core.search.aggregation.MetricAggregation;
 import io.searchbox.core.search.aggregation.TermsAggregation;
+import org.apache.lucene.search.join.ScoreMode;
+import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.filter.FilterAggregationBuilder;
@@ -21,8 +23,11 @@ import org.elasticsearch.search.aggregations.bucket.nested.NestedAggregationBuil
 import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
+import org.elasticsearch.search.sort.SortBuilders;
+import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.util.List;
@@ -62,7 +67,10 @@ public class GmallSearchServiceImpl implements GmallSearchService {
     public SearchResponse searchProduct(SearchParam searchParam) throws IOException {
         //根据页面传递的参数构建检索的DSL语句
         String queryDSL = buildSearchDsl(searchParam);
-        Search search = new Search.Builder(queryDSL).build();
+        Search search = new Search.Builder(queryDSL)
+                .addIndex(EsConstant.ES_PRODUCT_INDEX)
+                .addType(EsConstant.ES_PRODUCT_TYPE)
+                .build();
         //执行查询
         SearchResult result = jestClient.execute(search);
         //封装和分析查询结果
@@ -82,6 +90,7 @@ public class GmallSearchServiceImpl implements GmallSearchService {
      * @return
      */
     private SearchResponse buildSearchResult(SearchResult result) {
+        System.out.println(result.getTotal() + "==>" + result.toString());
         SearchResponse searchResponse = new SearchResponse();
         //分装所有的商品信息
         List<SearchResult.Hit<EsProduct, Void>> hits = result.getHits(EsProduct.class);
@@ -145,10 +154,52 @@ public class GmallSearchServiceImpl implements GmallSearchService {
      */
     private String buildSearchDsl(SearchParam searchParam) {
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        BoolQueryBuilder boolQuery = QueryBuilders.boolQuery();
         //查询
-        searchSourceBuilder.query(QueryBuilders.matchQuery("name", searchParam.getKeyword()));
-
+        if (!StringUtils.isEmpty(searchParam.getKeyword())) {
+            boolQuery.must(QueryBuilders.matchQuery("name", searchParam.getKeyword()));
+            boolQuery.should(QueryBuilders.matchQuery("subTitle", searchParam.getKeyword()));
+            boolQuery.should(QueryBuilders.matchQuery("keywords", searchParam.getKeyword()));
+        }
         //过滤
+        if (searchParam.getCatelog3Id() != null) {
+            boolQuery.filter(QueryBuilders.termsQuery("productCategoryId", searchParam.getCatelog3Id()));
+        }
+        if (searchParam.getBrandId() != null) {
+            boolQuery.filter(QueryBuilders.termsQuery("brandId", searchParam.getBrandId()));
+        }
+        if (searchParam.getProps() != null && searchParam.getProps().length > 0) {
+            String[] props = searchParam.getProps();
+            for (String prop : props) {
+                String productAttrId = prop.split(":")[0];
+                String peoductAttrValue = prop.split(":")[1];
+                boolQuery.filter(
+                        QueryBuilders.nestedQuery("attrValueList",
+                                QueryBuilders.boolQuery()
+                                        .must(QueryBuilders.termQuery("attrValueList.productAttributeId", productAttrId))
+                                        .must(QueryBuilders.termQuery("attrValueList.value", productAttrId)), ScoreMode.None)
+                );
+            }
+        }
+        String[] props = searchParam.getProps();
+        if (props != null) {
+            for (String prop : props) {
+                String valus = prop.split(":")[1];
+                String[] split = valus.split("-");
+                BoolQueryBuilder must = QueryBuilders.boolQuery()
+                        .must(QueryBuilders.termQuery("attrValueList.productAttributeId", prop.split(":")[0]))
+                        .must(QueryBuilders.termsQuery("attrValueList.value", split));
+                boolQuery.filter(QueryBuilders.nestedQuery("attrValueList", must, ScoreMode.None));
+            }
+        }
+        if (searchParam.getPriceFrom() != null) {
+            boolQuery.filter(QueryBuilders.rangeQuery("price").gte(searchParam.getPriceFrom()));
+        }
+        if (searchParam.getPriceTo() != null) {
+            boolQuery.filter(QueryBuilders.rangeQuery("price").lte(searchParam.getPriceTo()));
+        }
+        searchSourceBuilder.query(boolQuery);
+
         //聚合
         //聚合品牌信息
         TermsAggregationBuilder brandAggs = AggregationBuilders.terms("brandIdAgg")
@@ -201,7 +252,27 @@ public class GmallSearchServiceImpl implements GmallSearchService {
         searchSourceBuilder.from((searchParam.getPageNum() - 1) * searchParam.getPageSize());
         searchSourceBuilder.size(searchParam.getPageSize());
 
-        System.out.println(searchSourceBuilder.toString());
+        //5、排序
+        if (!StringUtils.isEmpty(searchParam.getOrder())) {
+            String order = searchParam.getOrder();
+            String type = order.split(":")[0];
+            String asc = order.split(":")[1];//asc;desc  2:asc 3:40-50
+
+            if ("0".equals(type)) {
+                searchSourceBuilder.sort(SortBuilders.scoreSort().order(SortOrder.fromString(asc)));
+            }
+            if ("1".equals(type)) {
+                //1、如果一开始没映射上可能导致数据没有。删索引，重新映射
+                searchSourceBuilder.sort(SortBuilders.fieldSort("sale").order(SortOrder.fromString(asc)));
+            }
+            if ("2".equals(type)) {
+                searchSourceBuilder.sort(SortBuilders.fieldSort("price").order(SortOrder.fromString(asc)));
+            }
+//            if("3".equals(type)){
+//                //价格区间查询
+//                searchSource.sort(SortBuilders.fieldSort("price").order(SortOrder.fromString(asc)));
+//            }
+        }
         return searchSourceBuilder.toString();
     }
 }
